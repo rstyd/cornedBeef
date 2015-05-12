@@ -1,9 +1,9 @@
 #include "list.h"
 
 // Returns a new empty list
-list_t *newList(size_t size) {
+list_t *newList() {
     // Store the list at this page address
-    list_t *newList = malloc(size);
+    list_t *newList = malloc(sizeof(list_t));
     newList->head = NULL;
     newList->tail = NULL;
     newList->size = 0;
@@ -12,25 +12,25 @@ list_t *newList(size_t size) {
 }
 
 // Add a node to to the back of the list
-node_t *pushNode(list_t *list, void *data){ 
+node_t *pushNode(list_t *list, void *key, void *value){ 
     node_t *node;
 
     if (list->head == NULL) {
         // Allocate space for the node
-        node = newNode(data, NULL, NULL);
+        node = newNode(key, value, NULL, NULL);
         list->head = node;
         // When the list has 1 element, the head and tail are equal
         list->tail = list->head;
         list->size++;
     }
     else if (list->size == 1) {
-        node = newNode(data,  NULL, list->head);	
+        node = newNode(key, value,  NULL, list->head);	
         list->tail = node;
         list->head->next = list->tail;
         list->size++;
     }
     else {
-        node = newNode(data, NULL, list->tail);
+        node = newNode(key, value, NULL, list->tail);
         list->tail->next = node;
         // the new node is the new tail
         list->tail = list->tail->next;
@@ -94,15 +94,17 @@ node_t *popNode(list_t *list) {
 node_t *findNode(list_t *list, void *key){
 
     node_t *currentNode = list->head;        
-    while (currentNode != NULL && currentNode->data != key) {
+    while (currentNode != NULL && currentNode->key != key) {
         currentNode = currentNode->next;
     }
     return currentNode;
     }
 
 // Returns a pointer to a newly allocated node
-node_t *newNode(void *data, node_t *next, node_t *prev) {
+node_t *newNode(void *key, void *value, node_t *next, node_t *prev) {
     node_t *newNode = malloc(sizeof(node_t));
+    newNode->key = key;
+    newNode->value = value;
     newNode->next = next;
     newNode->prev = prev;
     return newNode;
