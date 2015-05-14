@@ -17,6 +17,17 @@ hash_t *newHashTable(int capacity) {
     return hashTable;
 }
 
+void destroyHashTable(hash_t *hashTable) {
+   // Free all of the lists
+   for (int i = 0; i < hashTable->capacity; i++) {
+        if (hashTable->buckets[i] != NULL) {
+            deleteList(hashTable->buckets[i]);
+        }
+   }
+   free(hashTable->buckets);
+   free(hashTable);
+}
+
 // Looks up the key in the table
 void *lookup(hash_t *hashTable, char *key) {
     // hash the key
@@ -31,8 +42,9 @@ void *lookup(hash_t *hashTable, char *key) {
 
 // Adds a new key, value pair to the table 
 void add(hash_t *hashTable, void *key, void *value) {
+    printf("Adding (%s, %s)\n", key, value);
     // Make sure adding the node isn't going to push the hash table over the max load factor
-    if ((hashTable->keys + 1) / hashTable->capacity > MAX_LOAD_FACTOR) {
+    if ((hashTable->keys + 1.0) / hashTable->capacity > MAX_LOAD_FACTOR) {
         // Doubles the number of buckets in the table and rehashes all of the keys
         resize(hashTable);
     }
@@ -42,11 +54,15 @@ void add(hash_t *hashTable, void *key, void *value) {
     list_t *bucket;
 
     // The buckets are lazy initialized
-    if (hashTable->buckets[hKey] == NULL) 
+    if (hashTable->buckets[hKey] == NULL) { 
        hashTable->buckets[hKey] = newList(); 
+    }
 
     bucket = hashTable->buckets[hKey];
     pushNode(bucket, key, value); 
+
+    hashTable->keys++;
+    printf("Added %s to bucket %ld size: %zu\n", key, hKey, bucket->size);
 }
 
 // Removes the value associated with the key from the table
@@ -61,6 +77,7 @@ void delete(hash_t *hashTable, void *key) {
     node_t *entry = findNode(bucket, key);
     // TODO Make sure deleteNode actually works the way that I intended
     deleteNode(bucket, entry);
+    hashTable->keys--;
 }
 
 
@@ -78,22 +95,44 @@ unsigned long hash(int n, char *key) {
 
 // Doubles the number of buckets and redistributes the keys
 void resize(hash_t *hashTable) {
+    puts("RESIZING");
     // Double the memory alloted to the buckets array
-    realloc(hashTable->buckets, 2 * hashTable->capacity * sizeof(list_t *));
-    for (int i = 0; i < hashTable->capacity; i++) {
+    int oldCapacity = hashTable->capacity;
+    hashTable->capacity *= 2;
+    hashTable->buckets = realloc(hashTable->buckets,  hashTable->capacity * sizeof(list_t *));
+
+    // Initialize all of the new buckets to NULL
+    for (int i = oldCapacity; i < hashTable->capacity; i++) {
+        hashTable->buckets[i] = NULL;           
+    }
+
+
+    // List of all of the current entries
+    list_t *entries = newList();
+
+    // Go through each bucket
+    for (int i = 0; i < oldCapacity; i++) {
         list_t *bucket = hashTable->buckets[i];
-        if (bucket == NULL) {
-            continue;
+        if (bucket != NULL) {
+            // Add every node in the bucket to the entry list
+           for (int j = 0; j < bucket->size; j++) {
+                node_t *entry = popNode(bucket);
+                insertNode(entries, entry);
+           }
         }
-        // Go through every key in the list and rehash
-       for (int j = 0; j < bucket->size; j++) {
-            node_t *entry = popNode(bucket);
-            // Remove the key from the hashTable
-            delete(hashTable, entry->key); 
-            // Add it back
-            add(hashTable, entry->key, entry->value);
-            free(entry);
-       }
+    }
+
+    printList(entries); 
+
+    printf("%d\n", hashTable->keys);
+    for (int i = 0; i < hashTable->keys; i++) {
+        puts("DS");
+        node_t *entry = popNode(entries);
+        void *key = entry->key;
+        void *value = entry->value;
+        free(entry);
+
+        add(hashTable, key, value);
     }
 }
 

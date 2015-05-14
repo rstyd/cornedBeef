@@ -71,8 +71,9 @@ void insertNode(list_t *list, node_t *newNode){
 node_t *popNode(list_t *list) {
     node_t *doomed_node = NULL;
     if (list->size == 0) {
-        printf("Cannot remove an item from an empty list.\n");
-        exit(1);
+        //printf("Cannot remove an item from an empty list.\n");
+        //exit(1);
+        return NULL;
     }
 
     if (list->head == list->tail) {
@@ -131,13 +132,13 @@ void deleteNode(list_t *list, node_t *node) {
         if (node->next->prev != NULL)
             node->next->prev = node->prev;
     }
+    free(node);
     list->size--;
 }
 
 // Removes all elements from the list
 void clearList(list_t *list) {
-    node_t *currentNode = list->head;
-    while (currentNode != NULL) {
+    while (list->size != 0) {
         free(popNode(list));
     }
 
@@ -147,4 +148,16 @@ void clearList(list_t *list) {
 void deleteList(list_t *list) {
     clearList(list);
     free(list);
+}
+
+void printList(list_t *list) {
+    node_t *current = list->head;
+
+    while (current != NULL) {
+        if (current != list->tail)
+            printf("(%s, %s), ", current->key, current->value);
+        else
+            printf("(%s, %s)\n", current->key, current->value);
+        current = current->next;
+    }
 }

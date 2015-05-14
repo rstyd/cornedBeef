@@ -23,6 +23,7 @@ typedef struct hashTable {
 } hash_t;
 
 hash_t *newHashTable(int capacity);
+void destroyHashTable(hash_t *hashTable);
 void *lookup(hash_t *hashTable, char *key);
 void add(hash_t *hashTable, void *key, void *value);
 void delete(hash_t *hashTable, void *key);
